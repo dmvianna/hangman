@@ -41,10 +41,20 @@ randomWord' = gameWords >>= randomWord
 
 data Puzzle = Puzzle String [Maybe Char] [Char]
 
--- instance Show Puzzle where
---     show (Puzzle _ discovered guessed) =
---         (intersperse ' ' $ fmap renderPuzzleChar discovered)
---          ++ " Guessed so far: " ++ guessed
+instance Show Puzzle where
+    show (Puzzle _ discovered guessed) =
+        (intersperse ' ' $ fmap renderPuzzleChar discovered)
+         ++ " Guessed so far: " ++ guessed
 
 freshPuzzle :: String -> Puzzle
 freshPuzzle s = Puzzle s (map (\x -> Nothing) s) []
+
+charInWord :: Puzzle -> Char -> Bool
+charInWord (Puzzle word _ _) char = char `elem` word
+
+alreadyGuessed :: Puzzle -> Char -> Bool
+alreadyGuessed (Puzzle _ _ guessed) char = char `elem` guessed
+
+renderPuzzleChar :: Maybe Char -> Char
+renderPuzzleChar Nothing = '_'
+renderPuzzleChar (Just x) = x
