@@ -4,7 +4,7 @@ module Main where
 
 import Control.Monad (forever)
 import Data.Char (toLower)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe)
 import Data.List (intersperse)
 import System.Exit (exitSuccess)
 import System.Random (randomRIO)
@@ -89,9 +89,15 @@ handleGuess puzzle guess = do
                \ the word, try again."
       return (fillInCharacter puzzle guess)
 
+-----------
+guessedChars :: [Maybe Char] -> [Maybe Char]
+guessedChars = filter isJust
+-----------
+
 gameOver :: Puzzle -> IO ()
-gameOver (Puzzle wordToGuess _ guessed) =
-    if (length guessed) > 7 then
+gameOver (Puzzle wordToGuess discovered guessed) =
+    if (length guessed) -
+       (length $ guessedChars discovered) > 7 then
       do putStrLn "You lose!"
          putStrLn $ "The word was: " ++ wordToGuess
          exitSuccess
