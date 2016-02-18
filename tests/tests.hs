@@ -45,19 +45,27 @@ instance Eq Puzzle where
     discovered == discovered' &&
     guessed == guessed'
 
-prop_PuzzleMiss :: Property
-prop_PuzzleMiss =
-    forAll genMiss
-               (\(xs, x) ->
-                    fillInCharacter (freshPuzzle xs) x ==
-                    Puzzle xs (map (justify x) xs) [x] )
+-- Now we can write properties
 
-prop_PuzzleMatch :: Property
-prop_PuzzleMatch =
-    forAll genMatch
-               (\(xs, x) ->
-                    fillInCharacter (freshPuzzle xs) x ==
-                    Puzzle xs (map (justify x) xs) [x] )
+-- Note, though, that these will only have the "Property" type
+-- once we apply forAll in the main function. This path allows
+-- us to reuse code at least twice for every "property".
+
+prop_fillInCharacter :: (String, Char) -> Bool
+prop_fillInCharacter (xs, x) =
+    fillInCharacter (freshPuzzle xs) x ==
+    Puzzle xs (map (justify x) xs) [x]
+
+prop_checkCharInWord :: Bool -> (String, Char) -> Bool
+prop_checkCharInWord b (xs, x) =
+    charInWord (Puzzle xs (map (justify x) xs) [x] ) x == b
+
+prop_checkAlreadyGuessed :: Bool -> (String, Char) -> Bool
+prop_checkAlreadyGuessed b (xs, x) =
+    alreadyGuessed (Puzzle xs (map (justify x) xs) (consIf b x)) x == b
+        where 
+          consIf :: Bool -> Char -> String
+          consIf t c = if t then [c] else []
 
 -- Losing hope? Just print the damn Puzzle
 
@@ -69,8 +77,26 @@ puzzShow = do
 
 main :: IO ()
 main = hspec $ do
+  
   describe "Hangman tests -- fillInCharacter" $ do
-    it "Guessed the wrong character" $ do
-                               prop_PuzzleMiss
-    it "Guessed the right character" $ do
-                               prop_PuzzleMatch
+    it "Guesses the wrong character - does not fill in" $ do
+        forAll genMiss  prop_fillInCharacter
+    it "Guesses the right character - fills in" $ do
+        forAll genMatch prop_fillInCharacter
+
+  describe "Hangman tests -- charInWord" $ do
+    it "Checks if Char is in word - returns False" $ do
+      forAll genMiss (prop_checkCharInWord False)
+    it "Checks if Char is in word - returns True" $ do
+      forAll genMatch (prop_checkCharInWord True)
+
+  describe "Hangman tests - alreadyGuessed" $ do
+    it "Checks if Char has been guessed (miss) - returns False" $ do
+      forAll genMiss (prop_checkAlreadyGuessed False)
+    it "Checks the same for a match" $ do
+      forAll genMatch (prop_checkAlreadyGuessed False)
+      
+    it "Checks if Char has been guessed (miss) - returns True" $ do
+      forAll genMiss (prop_checkAlreadyGuessed True)
+    it "Checks the same for a match" $ do
+      forAll genMatch (prop_checkAlreadyGuessed True)
