@@ -46,7 +46,7 @@ instance Show Puzzle where
          ++ " Guessed so far: " ++ guessed
 
 freshPuzzle :: String -> Puzzle
-freshPuzzle s = Puzzle s (map (\x -> Nothing) s) []
+freshPuzzle s = Puzzle s (map (\_ -> Nothing) s) []
 
 charInWord :: Puzzle -> Char -> Bool
 charInWord (Puzzle word _ _) char = char `elem` word
